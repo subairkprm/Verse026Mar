@@ -1,0 +1,6 @@
+import type { Page } from "../App";
+const navItems: {key:Page;label:string}[] = [{key:"dashboard",label:"Dashboard"},{key:"leads",label:"Leads"},{key:"contacts",label:"Contacts"},{key:"accounts",label:"Accounts"},{key:"deals",label:"Deals"},{key:"tasks",label:"Tasks"},{key:"pipelines",label:"Pipelines"}];
+export function Sidebar({user,page,setPage}:{user:any;page:Page;setPage:(p:Page)=>void}) {
+  const logout = () => fetch("/api/auth/logout",{method:"POST"}).then(()=>window.location.reload());
+  return (<div className="w-64 bg-slate-900 text-white flex flex-col"><div className="p-4 border-b border-slate-700"><h1 className="text-xl font-bold text-blue-400">SpreadVerse CRM</h1></div><nav className="flex-1 py-4">{navItems.map(i=>(<button key={i.key} onClick={()=>setPage(i.key)} className={`w-full text-left px-4 py-3 hover:bg-slate-800 transition ${page===i.key?"bg-slate-800 border-r-2 border-blue-400":""}`}>{i.label}</button>))}</nav><div className="p-4 border-t border-slate-700"><div className="flex items-center gap-3">{user.avatarUrl&&<img src={user.avatarUrl} className="w-8 h-8 rounded-full" alt="" />}<div className="flex-1"><p className="text-sm truncate">{user.name}</p></div><button onClick={logout} className="text-sm text-gray-400 hover:text-white">Logout</button></div></div></div>);
+}

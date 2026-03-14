@@ -1,27 +1,41 @@
 import "dotenv/config";
 import express from "express";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
 import { createServer } from "http";
-import { registerRoutes } from "./routes.js";
-const app = express();
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-const PgStore = connectPgSimple(session);
-app.use(session({
-  store: new PgStore({ conString: process.env.DATABASE_URL, createTableIfMissing: true }),
-  secret: process.env.SESSION_SECRET || "spreadverse-dev-secret-change-me",
-  resave: false, saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === "production", maxAge: 7 * 24 * 60 * 60 * 1000 }
-}));
-const httpServer = createServer(app);
-await registerRoutes(httpServer, app);
-if (process.env.NODE_ENV === "production") {
-  const { serveStatic } = await import("./static.js");
-  serveStatic(app);
-} else {
-  const { setupVite } = await import("./vite.js");
-  await setupVite(app);
+import path from "path";
+import { fileURLToPath } from "url";
+import { setupAuth } from "./auth";
+import { registerRoutes } from "./routes";
+import { storage } from "./storage";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function main() {
+  const app = express();
+  const port = parseInt(process.env.PORT || "3000", 10);
+
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true }));
+
+  // Setup Google OAuth
+  setupAuth(app);
+
+  // Register API routes
+  registerRoutes(app);
+
+  // Serve static client build in production
+  const clientDist = path.join(__dirname, "..", "client", "dist");
+  app.use(express.static(clientDist));
+
+  // SPA fallback
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+
+  const server = createServer(app);
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`SpreadVerse CRM server running on port ${port}`);
+  });
 }
-const PORT = parseInt(process.env.PORT || "5000");
-httpServer.listen(PORT, "0.0.0.0", () => console.log(`SpreadVerse running on port ${PORT}`));
+
+main().catch(console.error);
