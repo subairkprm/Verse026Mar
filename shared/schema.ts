@@ -15,7 +15,6 @@ export const users = pgTable("users", {
 });
 export const insertUserSchema = createInsertSchema(users).pick({ username: true, password: true, name: true, email: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
-e
 export const workspaces = pgTable("workspaces", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ownerUserId: varchar("owner_user_id").notNull(),
@@ -39,7 +38,7 @@ export const workspaceMembers = pgTable("workspace_members", {
 export const insertWorkspaceMemberSchema = createInsertSchema(workspaceMembers).omit({ id: true, createdAt: true });
 export type InsertWorkspaceMember = z.infer<typeof insertWorkspaceMemberSchema>;
 export type WorkspaceMember = typeof workspaceMembers.$inferSelect;
-xport type User = typeof users.$inferSelect;
+export type User = typeof users.$inferSelect;
 
 // LEADS
 export const LEAD_STATUSES = ["New","Interested","Docs Collected","Submitted","Approved","Callback","Not Interested","No Answer","Wrong Number","Referral Sent"] as const;
